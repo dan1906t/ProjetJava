@@ -15,6 +15,16 @@ public enum PieceType {
 	
 	public Orientation getOrientation(Orientation o) {return o;};
 	
-	public void setConnectorsList(Orientation O) {};
+	public LinkedList<Orientation> setConnectorsList(Orientation O) {
+		LinkedList<Orientation> l = new LinkedList<Orientation>();
+		return l;
+	};
 	
+	public ArrayList<Orientation> getListOfPossibleOri(){
+		return new ArrayList<Orientation>();
+	}
+	
+	public static PieceType getTypefromValue(int value) {
+		return this;
+	}
 }
