@@ -1,27 +1,20 @@
 package fr.dauphine.JavaAvance.GUI;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 import fr.dauphine.JavaAvance.Components.Orientation;
 import fr.dauphine.JavaAvance.Components.Piece;
 import fr.dauphine.JavaAvance.Components.PieceType;
 
 /**
- * Grid handler and peces'functions which depends of the grid
- * 
- *
+ * Grid handler and pieces functions which depends of the grid
  */
 public class Grid {
 	private int width; // j
 	private int height; // i
 	private int nbcc = -1;
 	private Piece[][] pieces;
-
-	public Grid(int width, int height) {
-		this.width = width;
-		this.height = height;
-		pieces = new Piece[height][width];
-	}
 
 	// Constructor with specified number of connected component
 	public Grid(int width, int height, int nbcc) {
@@ -31,12 +24,17 @@ public class Grid {
 		pieces = new Piece[height][width];
 	}
 
+	public Grid(int width, int height) {
+		this(width, height, -1);
+	}
+
 	public int getWidth() {
 		return width;
 	}
 
 	public void setWidth(int width) {
 		this.width = width;
+		//Should probably update pieces here but not used anywhere in the code
 	}
 
 	public int getHeight() {
@@ -45,6 +43,7 @@ public class Grid {
 
 	public void setHeight(int height) {
 		this.height = height;
+		//TODO Should probably update pieces here but not used anywhere in the code
 	}
 
 	public Integer getNbcc() {
@@ -61,6 +60,7 @@ public class Grid {
 
 	public void setPiece(int line, int column, Piece piece) {
 		this.pieces[line][column] = piece;
+		//TODO Should probably update the piece's coordinates
 	}
 
 	public Piece[][] getAllPieces() {
@@ -68,10 +68,10 @@ public class Grid {
 	}
 
 	/**
-	 * Check if a case is a corner
+	 * Checks if a case is a corner
 	 * 
-	 * @param line
-	 * @param column
+	 * @param line line of the case
+	 * @param column column of the case
 	 * @return true if the case is a corner
 	 */
 	public boolean isCorner(int line, int column) {
@@ -93,10 +93,10 @@ public class Grid {
 	}
 
 	/**
-	 * Check if a case is member of the first or the last line
+	 * Checks if a case is member of the first or the last line
 	 * 
-	 * @param line
-	 * @param column
+	 * @param line line of the case
+	 * @param column column of the case
 	 * @return true if the case is a corner
 	 */
 	public boolean isBorderLine(int line, int column) {
@@ -106,14 +106,13 @@ public class Grid {
 			return true;
 		}
 		return false;
-
 	}
 
 	/**
-	 * Check if a case is member of the first or the last column
+	 * Checks if a case is member of the first or the last column
 	 * 
-	 * @param line
-	 * @param column
+	 * @param line line of the case
+	 * @param column column of the case
 	 * @return true if the case is a corner
 	 */
 	public boolean isBorderColumn(int line, int column) {
@@ -123,20 +122,18 @@ public class Grid {
 			return true;
 		}
 		return false;
-
 	}
 
 	/**
-	 * Check if a piece has a neighbour for its connectors for one orientation
+	 * Checks if a piece has a  non-void neighbor in the direction of one of its connector in its current orientation
 	 * 
-	 * @param p
-	 *            piece
-	 * @return true if there is a neighbour for all connectors
+	 * @param p the piece to check
+	 * @return true if there is a non-void neighbor for all connectors
 	 */
 	public boolean hasNeighbour(Piece p) {
-		for (Orientation ori : p.getConnectors()) {
-			int oppPieceY = ori.getOpposedPieceCoordinates(p)[0];// i
-			int oppPieceX = ori.getOpposedPieceCoordinates(p)[1];// j
+		for (Orientation c : p.getConnectors()) {
+			int oppPieceY = c.getOpposedPieceCoordinates(p)[0];// i
+			int oppPieceX = c.getOpposedPieceCoordinates(p)[1];// j
 			try {
 				if (this.getPiece(oppPieceY, oppPieceX).getType() == PieceType.VOID) {
 					return false;
@@ -151,18 +148,17 @@ public class Grid {
 	}
 
 	/**
-	 * Check if a piece has a fixed neighbor for each one of its connecotrs
+	 * Checks if a piece has a fixed connected neighbor for each one of its connectors. (connected neighbor = neighbor in a direction of one of this piece's connectors, that also has a connector in the direction of this piece)
 	 * 
-	 * @param p
-	 *            the piece
-	 * @return true if there is a fixed piece for each connector
+	 * @param p the piece to check
+	 * @return true if there is a fixed connected neighbor for each connector
 	 */
 	public boolean hasFixedNeighbour(Piece p) {
 		boolean bool = false;
-		for (Orientation ori : p.getConnectors()) {
+		for (Orientation c : p.getConnectors()) {
 			bool = false;
-			int oppPieceY = ori.getOpposedPieceCoordinates(p)[0];// i
-			int oppPieceX = ori.getOpposedPieceCoordinates(p)[1];// j
+			int oppPieceY = c.getOpposedPieceCoordinates(p)[0];// i
+			int oppPieceX = c.getOpposedPieceCoordinates(p)[1];// j
 			try {
 				Piece neigh = this.getPiece(oppPieceY, oppPieceX);
 				if (neigh.getType() == PieceType.VOID || !neigh.isFixed()) {
@@ -170,7 +166,7 @@ public class Grid {
 				}
 				if (neigh.isFixed()) {
 					for (Orientation oriOppPiece : neigh.getConnectors()) {
-						if (ori == oriOppPiece.getOpposedOrientation()) {
+						if (c == oriOppPiece.getOpposedOrientation()) {
 							bool = true;
 						}
 					}
@@ -187,21 +183,20 @@ public class Grid {
 	}
 
 	/**
-	 * Check if a piece has a at least one fixed neighbor
+	 * Checks if a piece has a at least one fixed connected neighbor
 	 * 
-	 * @param p
-	 *            the piece
-	 * @return true if there is a fixed piece for each connector
+	 * @param p the piece to check
+	 * @return true if the piece has a at least one fixed connected neighbor
 	 */
 	public boolean hasAtLeast1FixedNeighbour(Piece p) {
-		for (Orientation ori : p.getConnectors()) {
-			int oppPieceY = ori.getOpposedPieceCoordinates(p)[0];// i
-			int oppPieceX = ori.getOpposedPieceCoordinates(p)[1];// j
+		for (Orientation c : p.getConnectors()) {
+			int oppPieceY = c.getOpposedPieceCoordinates(p)[0];// i
+			int oppPieceX = c.getOpposedPieceCoordinates(p)[1];// j
 			try {
 				Piece neigh = this.getPiece(oppPieceY, oppPieceX);
 				if (neigh.isFixed()) {
 					for (Orientation oriOppPiece : neigh.getConnectors()) {
-						if (ori == oriOppPiece.getOpposedOrientation()) {
+						if (c == oriOppPiece.getOpposedOrientation()) {
 							return true;
 						}
 					}
@@ -214,17 +209,16 @@ public class Grid {
 	}
 
 	/**
-	 * list of neighbors
+	 * Gets the list of non-void neighbors of a pieces in the direction of its connectors
 	 * 
-	 * @param p
-	 *            the piece
+	 * @param p the piece
 	 * @return the list of neighbors
 	 */
 	public ArrayList<Piece> listOfNeighbours(Piece p) {
 		ArrayList<Piece> lp = new ArrayList<>();
-		for (Orientation ori : p.getConnectors()) {
-			int oppPieceY = ori.getOpposedPieceCoordinates(p)[0];// i
-			int oppPieceX = ori.getOpposedPieceCoordinates(p)[1];// j
+		for (Orientation c : p.getConnectors()) {
+			int oppPieceY = c.getOpposedPieceCoordinates(p)[0];// i
+			int oppPieceX = c.getOpposedPieceCoordinates(p)[1];// j
 
 			if (oppPieceY >= 0 && oppPieceY < this.getHeight() && oppPieceX >= 0 && oppPieceX < this.width) {
 				if (this.getPiece(oppPieceY, oppPieceX).getType() != PieceType.VOID) {
@@ -237,9 +231,9 @@ public class Grid {
 	}
 
 	/**
-	 * this function returns the number of neighbors
+	 * Returns the number of non-void neighbors of a piece in the direction of its connectors
 	 * 
-	 * @param p
+	 * @param p the piece
 	 * @return the number of neighbors
 	 */
 	public int numberOfNeibours(Piece p) {
@@ -258,9 +252,9 @@ public class Grid {
 	}
 
 	/**
-	 * this function returns the number of fixed neighbors
+	 * Returns the number of fixed neighbors of a piece
 	 * 
-	 * @param p
+	 * @param p the piece
 	 * @return the number of neighbors
 	 */
 	public int numberOfFixedNeibours(Piece p) {
@@ -280,10 +274,9 @@ public class Grid {
 	}
 
 	/**
-	 * Check if all pieces have neighbors even if we don't know the orientation
+	 * Checks if all pieces of the grid have at least one neighbor in the direction of one of their connectors
 	 * 
-	 * @param p
-	 * @return false if a piece has no neighbor
+	 * @return false if a piece has no neighbor in the direction of its connectors
 	 */
 	public boolean allPieceHaveNeighbour() {
 
@@ -303,10 +296,9 @@ public class Grid {
 	}
 
 	/**
-	 * Return the next piece of the current piece
+	 * Returns the next piece of the current piece
 	 * 
-	 * @param p
-	 *            the current piece
+	 * @param p the current piece
 	 * @return the piece or null if p is the last piece
 	 */
 	public Piece getNextPiece(Piece p) {
@@ -326,10 +318,9 @@ public class Grid {
 	}
 	
 	/**
-	 * Return the next piece of the current piece right2left and bottom2top
+	 * Returns the next piece of the current piece right2left and bottom2top
 	 * 
-	 * @param p
-	 *            the current piece
+	 * @param p the current piece
 	 * @return the piece or null if p is the last piece
 	 */
 	public Piece getNextPieceInv(Piece p) {
@@ -352,20 +343,18 @@ public class Grid {
 	}
 
 	/**
-	 * Check if a piece is connected
+	 * Checks if a piece is connected to its neighbor in one direction (supposing it has a connector in that direction)
 	 * 
-	 * @param line
-	 * @param column
+	 * @param p the piece to check
+	 * @param d the direction to check for the connection
 	 * @return true if a connector of a piece is connected
 	 */
-	public boolean isConnected(Piece p, Orientation ori) {
-		int oppPieceY = ori.getOpposedPieceCoordinates(p)[0];// i
-		int oppPieceX = ori.getOpposedPieceCoordinates(p)[1];// j
-		if (p.getType() == PieceType.VOID)
-			return true;
+	public boolean isConnected(Piece p, Orientation d) {
+		int oppPieceY = d.getOpposedPieceCoordinates(p)[0];// i
+		int oppPieceX = d.getOpposedPieceCoordinates(p)[1];// j
 		try {
 			for (Orientation oppConnector : this.getPiece(oppPieceY, oppPieceX).getConnectors()) {
-				if (oppConnector == ori.getOpposedOrientation()) {
+				if (oppConnector == d.getOpposedOrientation()) {
 					return true;
 				}
 			}
@@ -376,11 +365,10 @@ public class Grid {
 	}
 
 	/**
-	 * Check if a piece is totally connected
+	 * Checks if a piece is totally connected (in all directions). Should return the same as isValidOrientation.
 	 * 
-	 * @param line
-	 * @param column
-	 * @return true if a connector of a piece is connected
+	 * @param p the piece to check
+	 * @return true if a connector of the piece is connected
 	 */
 	public boolean isTotallyConnected(Piece p) {
 		if (p.getType() != PieceType.VOID) {
@@ -394,10 +382,27 @@ public class Grid {
 	}
 
 	/**
-	 * Check if a piece position is valid
+	 * ADDED. Checks if all pieces in the grid are totally connected. Should return the same as allPiecesValid.
 	 * 
-	 * @param line
-	 * @param column
+	 * @return true if a connector of a piece is connected
+	 */
+	public boolean allPiecesTotallyConnected() {
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				if(!isTotallyConnected(getPiece(i,j))) {
+					System.out.print("test "+i+","+j);
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Checks if a piece position is valid. Should return the same as isTotallyConnected.
+	 * 
+	 * @param line of the piece
+	 * @param column of the piece
 	 * @return true if a connector of a piece is connected
 	 */
 	public boolean isValidOrientation(int line, int column) {
@@ -476,9 +481,25 @@ public class Grid {
 	}
 
 	/**
-	 * Find the left neighbor
+	 * ADDED. Checks if all pieces in the grid are valid. Should return the same as allPiecesTotallyConnected.
 	 * 
-	 * @param p
+	 * @return true if a connector of a piece is connected
+	 */
+	public boolean allPiecesValid() {
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				if(!isValidOrientation(i,j)) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Find the left neighbor of a piece
+	 * 
+	 * @param p the piece
 	 * @return the neighbor or null if no neighbor
 	 */
 	public Piece leftNeighbor(Piece p) {
@@ -494,7 +515,7 @@ public class Grid {
 	/**
 	 * Find the top neighbor
 	 * 
-	 * @param p
+	 * @param p the piece
 	 * @return the neighbor or null if no neighbor
 	 */
 	public Piece topNeighbor(Piece p) {
@@ -510,7 +531,7 @@ public class Grid {
 	/**
 	 * Find the right neighbor
 	 * 
-	 * @param p
+	 * @param p the piece
 	 * @return the neighbor or null if no neighbor
 	 */
 	public Piece rightNeighbor(Piece p) {
@@ -526,7 +547,7 @@ public class Grid {
 	/**
 	 * Find the bottom neighbor
 	 * 
-	 * @param p
+	 * @param p the piece
 	 * @return the neighbor or null if no neighbor
 	 */
 	public Piece bottomNeighbor(Piece p) {
@@ -539,9 +560,29 @@ public class Grid {
 		return null;
 	}
 
+  /**
+	 * ADDED. Finds the neighbor in the specified direction
+	 * 
+	 * @param p the piece
+	 * @param d the direction
+	 * @return the neighbor or null if no neighbor
+	 */
+	public Piece getNeighborFromDirection(Piece p, Orientation d) {
+		switch (d) {
+			case NORTH:
+				return topNeighbor(p);
+			case EAST:
+				return rightNeighbor(p);
+			case SOUTH:
+				return bottomNeighbor(p);
+			case WEST:
+				return leftNeighbor(p);
+		}
+		return null;
+	}
+
 	@Override
 	public String toString() {
-
 		String s = "";
 		for (int i = 0; i < height; i++) {
 			for (int j = 0; j < width; j++) {
@@ -552,4 +593,34 @@ public class Grid {
 		return s;
 	}
 
+  /**
+	 * ADDED. Displays the current grid in console. Useful for really big grids : toString appends to a really big string and is really slow
+	 * 
+	 * @param color true if should print special characters to color fixed pieces
+	 */
+	public void print(boolean color) {
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				if(pieces[i][j] != null) {
+					if(color && pieces[i][j].isFixed()) {
+						System.out.print("\u001B[34m");
+					}
+					System.out.print(DisplayUnicode.getUnicodeOfPiece(pieces[i][j].getType(), pieces[i][j].getOrientation()));
+					if(color && pieces[i][j].isFixed()) {
+						System.out.print("\u001B[0m");
+					}
+				} else {
+					System.out.print(" ");
+				}
+			}
+			System.out.println();
+		}
+	}
+
+  /**
+	 * ADDED. Displays the current grid in console. Useful for really big grids : toString appends to a really big string and is really slow
+	 */
+	public void print() {
+		print(false);
+	}
 }
